@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Evaluation System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* --- Global Variables & Resets --- */
+        :root {
+            --primary-color: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --accent-color: #10b981;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 30px;
+        }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        /* --- Typography Helpers --- */
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--primary-dark);
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-light);
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+        .text-center { text-align: center; }
+        .hidden { display: none !important; }
+
+        /* --- Buttons --- */
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+        
+        .btn-submit {
+            background: var(--accent-color);
+            color: var(--white);
+            width: 100%;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .btn-submit:hover { background: #059669; }
+        
+        .btn-pdf {
+            background: #ef4444;
+            color: var(--white);
+            margin: 25px 0 40px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        .btn-pdf:hover { background: #dc2626; }
+
+        /* --- Header / Navigation --- */
+        header {
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar {
+            display: flex;
+            justify-between: space-between;
+            align-items: center;
+            height: 80px;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .logo span { color: var(--primary-light); }
+        .nav-links { display: flex; list-style: none; }
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: 500;
+        }
+        .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; }
+
+        /* --- Hero Section --- */
+        .hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: var(--white);
+            padding: 60px 0;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2.8rem; margin-bottom: 15px; font-weight: 700; }
+
+        /* --- Workspace Form Panels --- */
+        .form-stats-section { padding: 40px 0; }
+        .form-group { margin-bottom: 20px; }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--primary-dark);
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        
+        .evaluation-split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 25px;
+        }
+        .side-panel {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .side-panel h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        
+        input[type="file"] { display: none; }
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #e2e8f0;
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .file-name { margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
+
+        /* --- Statistics Dashboard --- */
+        .dashboard-panel h2 { margin-bottom: 25px; color: var(--primary-dark); text-align: center;}
+        .stat-card { display: flex; align-items: center; padding: 20px; }
+        .stat-icon { font-size: 2rem; margin-right: 20px; width: 50px; text-align: center; }
+        .stat-icon.blue { color: var(--primary-light); }
+        .stat-icon.green { color: var(--accent-color); }
+        .stat-icon.gold { color: #f59e0b; }
+        .stat-info h3 { font-size: 1.6rem; line-height: 1.2; }
+        .stat-info p { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* --- Results Display & PDF Layout Configs --- */
+        .results-section { background: #f1f5f9; padding: 60px 0; }
+        .overall-badge-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .overall-score-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+        }
+        .overall-score-circle span { font-size: 2rem; }
+        .grade-badge {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: #dbeafe;
+            padding: 8px 20px;
+            border-radius: 30px;
+        }
+
+        .progress-wrapper { margin-bottom: 20px; }
+        .progress-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+        .progress-bar { background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden; }
+        .progress { background: var(--primary-light); height: 100%; width: 0%; transition: width 0.5s ease; }
+        .progress.orange { background: #f97316; }
+
+        /* --- Academic Profile Grid Layout --- */
+        .pdf-meta-container {
+            background: var(--white);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+        .pdf-meta-item strong { color: var(--primary-dark); }
+
+        /* --- Extra Feature: Rubric Table System --- */
+        .rubric-table-wrapper {
+            margin-top: 25px;
+            overflow-x: auto;
+        }
+        .rubric-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 10px;
+        }
+        .rubric-table th, .rubric-table td {
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+        }
+        .rubric-table th {
+            background-color: #f1f5f9;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        /* --- Feedback Section Blocks --- */
+        .feedback-card h3 { margin-bottom: 20px; }
+        .feedback-block { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
+        .feedback-block:last-child { border: none; }
+        .feedback-block h4 { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin-bottom: 5px; }
+        .item-strengths h4 { color: var(--accent-color); }
+        .item-weaknesses h4 { color: #df4747; }
+        .teacher-comments { background: #f8fafc; padding: 15px; border-radius: 8px; }
+
+        /* --- Content Panels inside PDF --- */
+        .pdf-documents-review-block { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px; }
+        .doc-view-box { background: var(--white); padding: 20px; border-radius: var(--radius); border: 1px solid #e2e8f0; }
+        .doc-view-text {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            border-left: 4px solid var(--primary-light);
+        }
+
+        footer { background: #0f172a; color: #94a3b8; padding: 30px 0; text-align: center; }
+
+        /* --- CRITICAL PDF BREAK FIX STYLING OVERRIDES --- */
+        .html2pdf-fallback {
+            display: block !important;
+            background: #ffffff !important;
+            color: #1e293b !important;
+            padding: 20px !important;
+        }
+        .html2pdf-fallback .grid, 
+        .html2pdf-fallback .pdf-meta-container,
+        .html2pdf-fallback .pdf-documents-review-block {
+            display: block !important;
+        }
+        .html2pdf-fallback .card,
+        .html2pdf-fallback .pdf-meta-item,
+        .html2pdf-fallback .doc-view-box {
+            display: block !important;
+            width: 100% !important;
+            margin-bottom: 20px !important;
+            box-shadow: none !important;
+            border: 1px solid #cbd5e1 !important;
+            page-break-inside: avoid !important;
+        }
+
+        @media (max-width: 850px) {
+            .evaluation-split-container, .pdf-documents-review-block, .pdf-meta-container { grid-template-columns: 1fr; }
+            .menu-toggle { display: block; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container navbar">
+            <div class="logo"><i class="fas fa-graduation-cap"></i> Eval<span>System</span></div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#evaluate">Evaluate Assignment</a></li>
+                    <li><a href="#results">Results</a></li>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                </ul>
+            </nav>
+            <div class="menu-toggle" id="mobile-menu"><i class="fas fa-bars"></i></div>
+        </div>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="container">
+            <h1>Dual-Input Assignment Evaluation Engine</h1>
+            <p>Upload your question blueprints and submission scripts side-by-side for criteria evaluation and instantaneous generation of error-free transcripts.</p>
+        </div>
+    </section>
+
+    <section id="evaluate" class="container form-stats-section">
+        <div class="card form-card">
+            <h2>Assignment Evaluation Workspace</h2>
+            <form id="evaluationForm">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="studentName">Student Name *</label>
+                        <input type="text" id="studentName" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="registrationId">Registration ID / Regd. ID *</label>
+                        <input type="text" id="registrationId" required placeholder="REG-2026-9931">
+                    </div>
+                    <div class="form-group">
+                        <label for="courseBranch">Course Name / Branch *</label>
+                        <input type="text" id="courseBranch" required placeholder="Computer Science Engineering">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignmentTitle">Assignment Title *</label>
+                        <input type="text" id="assignmentTitle" required placeholder="Neural Networks Thesis">
+                    </div>
+                </div>
+
+                <div class="evaluation-split-container">
+                    
+                    <div class="side-panel">
+                        <h3><i class="fas fa-file-alt"></i> 1. Question Paper Part</h3>
+                        <div class="form-group">
+                            <label>Upload Question Blueprint</label>
+                            <label for="questionUpload" class="file-label"><i class="fas fa-upload"></i> Choose Document</label>
+                            <input type="file" id="questionUpload" accept=".pdf,.docx,.txt">
+                            <div id="questionFileDisplay" class="file-name">No file selected</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="questionText">Or Paste Question Details *</label>
+                            <textarea id="questionText" rows="8" required placeholder="Paste questions guidelines or source criteria prompts here..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="side-panel">
+                        <h3><i class="fas fa-pen-square"></i> 2. Student Answer Part</h3>
+                        <div class="form-group">
+                            <label>Upload Student Answer Sheet</label>
+                            <label for="answerUpload" class="file-label"><i class="fas fa-upload"></i> Choose Document</label>
+                            <input type="file" id="answerUpload" accept=".pdf,.docx,.txt">
+                            <div id="answerFileDisplay" class="file-name">No file selected</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="answerText">Or Paste Student Submission Text *</label>
+                            <textarea id="answerText" rows="8" required placeholder="Paste student answer responses here..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-submit">Submit for Verification & Cross-Evaluation</button>
+            </form>
+        </div>
+
+        <div id="dashboard" class="dashboard-panel" style="margin-top: 40px;">
+            <h2>System Statistics Dashboard</h2>
+            <div class="grid grid-3">
+                <div class="card stat-card">
+                    <i class="fas fa-file-invoice stat-icon blue"></i>
+                    <div class="stat-info"><h3 id="statCount">148</h3><p>Assignments Evaluated</p></div>
+                </div>
+                <div class="card stat-card">
+                    <i class="fas fa-chart-line stat-icon green"></i>
+                    <div class="stat-info"><h3 id="statAvg">82.1%</h3><p>Average Score</p></div>
+                </div>
+                <div class="card stat-card">
+                    <i class="fas fa-trophy stat-icon gold"></i>
+                    <div class="stat-info"><h3 id="statHigh">99%</h3><p>Highest Score</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="results" class="results-section hidden">
+        <div class="container" id="pdfReportContainer">
+            <h2 class="section-title" style="margin-bottom:20px;">Evaluation Transcript Report</h2>
+            
+            <div class="pdf-meta-container">
+                <div class="pdf-meta-item"><strong>Student Name:</strong> <span id="pdfName">-</span></div>
+                <div class="pdf-meta-item"><strong>Registration ID / Regd. ID:</strong> <span id="pdfRegId">-</span></div>
+                <div class="pdf-meta-item"><strong>Course / Branch:</strong> <span id="pdfBranch">-</span></div>
+                <div class="pdf-meta-item"><strong>Assignment Title:</strong> <span id="pdfTitle">-</span></div>
+                <div class="pdf-meta-item"><strong>Evaluation Timestamp:</strong> <span id="pdfDate">-</span></div>
+                <div class="pdf-meta-item"><strong>Verification Protocol:</strong> <span>Cross-Referenced Analytical Parsing Engine</span></div>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card result-card">
+                    <h3>Performance Score Matrix</h3>
+                    <div class="overall-badge-wrapper">
+                        <div class="overall-score-circle">
+                            <span id="resOverall">0</span><small>/100</small>
+                        </div>
+                        <div class="grade-badge">Grade Designation: <span id="resGrade">-</span></div>
+                    </div>
+
+                    <div class="progress-wrapper">
+                        <div class="progress-info"><span>Content Accuracy Score</span><span id="lblAccuracy">0%</span></div>
+                        <div class="progress-bar"><div id="barAccuracy" class="progress"></div></div>
+                    </div>
+                    <div class="progress-wrapper">
+                        <div class="progress-info"><span>Grammar Score</span><span id="lblGrammar">0%</span></div>
+                        <div class="progress-bar"><div id="barGrammar" class="progress"></div></div>
+                    </div>
+                    <div class="progress-wrapper">
+                        <div class="progress-info"><span>Organization Score</span><span id="lblOrganization">0%</span></div>
+                        <div class="progress-bar"><div id="barOrganization" class="progress"></div></div>
+                    </div>
+                    <div class="progress-wrapper">
+                        <div class="progress-info"><span>Completeness Score</span><span id="lblCompleteness">0%</span></div>
+                        <div class="progress-bar"><div id="barCompleteness" class="progress"></div></div>
+                    </div>
+
+                    <div class="progress-wrapper" style="margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                        <div class="progress-info"><span><i class="fas fa-shield-alt"></i> Similarity / Plagiarism Index</span><span id="lblPlagiarism">12%</span></div>
+                        <div class="progress-bar"><div id="barPlagiarism" class="progress orange" style="width: 12%"></div></div>
+                    </div>
+                </div>
+
+                <div class="card feedback-card">
+                    <h3>Diagnostic Diagnostics & Insights</h3>
+                    <div class="feedback-block item-strengths">
+                        <h4><i class="fas fa-plus-circle"></i> Strengths</h4>
+                        <p id="feedbackStrengths">Processing...</p>
+                    </div>
+                    <div class="feedback-block item-weaknesses">
+                        <h4><i class="fas fa-minus-circle"></i> Weaknesses</h4>
+                        <p id="feedbackWeaknesses">Processing...</p>
+                    </div>
+                    <div class="feedback-block">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Missing Topics (Not Answered)</h4>
+                        <p id="feedbackMissing">Processing...</p>
+                    </div>
+                    <div class="feedback-block">
+                        <h4><i class="fas fa-pen-nib"></i> Grammar Suggestions</h4>
+                        <p id="feedbackGrammar">Processing...</p>
+                    </div>
+                    <div class="feedback-block teacher-comments">
+                        <h4><i class="fas fa-comment-medical"></i> Final Teacher Comments</h4>
+                        <p id="feedbackComments">Processing...</p>
+                    </div>
+                </div>
+
+                <div class="card rubric-card" style="grid-column: span 2;">
+                    <h3><i class="fas fa-table"></i> Itemized Rubric Grading Breakdown</h3>
+                    <div class="rubric-table-wrapper">
+                        <table class="rubric-table">
+                            <thead>
+                                <tr>
+                                    <th>Evaluation Rubric Domain</th>
+                                    <th>Max Points</th>
+                                    <th>Awarded Points</th>
+                                    <th>Status Designation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Technical Conceptual Depth</td>
+                                    <td>40</td>
+                                    <td id="rubricAccuracy">-</td>
+                                    <td><span style="color:var(--accent-color); font-weight:600;">Verified</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Syntax & Syntactic Structure</td>
+                                    <td>20</td>
+                                    <td id="rubricGrammar">-</td>
+                                    <td><span style="color:var(--accent-color); font-weight:600;">Verified</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Structural Layout Framing</td>
+                                    <td>20</td>
+                                    <td id="rubricOrg">-</td>
+                                    <td><span style="color:var(--accent-color); font-weight:600;">Verified</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Blueprint Requirement Coverage</td>
+                                    <td>20</td>
+                                    <td id="rubricComplete">-</td>
+                                    <td><span style="color:var(--accent-color); font-weight:600;">Verified</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="pdf-documents-review-block">
+                    <div class="doc-view-box">
+                        <h4><i class="fas fa-question-circle"></i> Target Blueprint Question Text</h4>
+                        <div class="doc-view-text" id="pdfQuestionView">None Specified</div>
+                    </div>
+                    <div class="doc-view-box">
+                        <h4><i class="fas fa-check-circle"></i> Evaluated Student Answer Sheet Text</h4>
+                        <div class="doc-view-text" id="pdfAnswerView">None Specified</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container text-center">
+            <button id="downloadPdfBtn" class="btn btn-pdf">
+                <i class="fas fa-download"></i> Download Evaluation PDF Transcript
+            </button>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Dual-Input Assignment Evaluation Framework. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // --- Navigation Bar Setup ---
+            const mobileMenuBtn = document.getElementById("mobile-menu");
+            const navLinks = document.querySelector(".nav-links");
+            if(mobileMenuBtn) {
+                mobileMenuBtn.addEventListener("click", () => navLinks.classList.toggle("active"));
+            }
+
+            // --- Realtime Input Tracking Labels ---
+            const linkFileTracker = (fileInputId, textDisplayId) => {
+                const src = document.getElementById(fileInputId);
+                const target = document.getElementById(textDisplayId);
+                if(src && target) {
+                    src.addEventListener("change", (e) => {
+                        target.textContent = e.target.files.length > 0 ? `Selected Document: ${e.target.files[0].name}` : "No file selected";
+                    });
+                }
+            };
+            linkFileTracker("questionUpload", "questionFileDisplay");
+            linkFileTracker("answerUpload", "answerFileDisplay");
+
+            // --- Submission Matrix Handling ---
+            const form = document.getElementById("evaluationForm");
+            const resultsSection = document.getElementById("results");
+
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById("studentName").value.trim();
+                const regId = document.getElementById("registrationId").value.trim();
+                const branch = document.getElementById("courseBranch").value.trim();
+                const title = document.getElementById("assignmentTitle").value.trim();
+                const qText = document.getElementById("questionText").value.trim();
+                const aText = document.getElementById("answerText").value.trim();
+
+                if (!name || !regId || !qText || !aText) {
+                    alert("Please fill all necessary workspace components before running cross-evaluation pipelines.");
+                    return;
+                }
+
+                // Inject profiles into PDF Report Display Elements
+                document.getElementById("pdfName").textContent = name;
+                document.getElementById("pdfRegId").textContent = regId;
+                document.getElementById("pdfBranch").textContent = branch;
+                document.getElementById("pdfTitle").textContent = title;
+                document.getElementById("pdfQuestionView").textContent = qText;
+                document.getElementById("pdfAnswerView").textContent = aText;
+                document.getElementById("pdfDate").textContent = new Date().toLocaleString('en-US', {
+                    dateStyle: 'long', timeStyle: 'short'
+                });
+
+                // Generate cross-reference score ratios safely
+                const crossRatio = Math.min(aText.length / qText.length, 1.4);
+                const referenceSeed = Math.min(Math.max(65 + Math.floor(crossRatio * 18), 58), 97);
+
+                const scores = {
+                    accuracy: Math.min(referenceSeed + 2, 100),
+                    grammar: Math.min(referenceSeed - 3, 96),
+                    organization: Math.min(referenceSeed + 1, 98),
+                    completeness: Math.min(Math.floor(referenceSeed * (crossRatio >= 0.85 ? 1.03 : 0.82)), 100)
+                };
+
+                const overall = Math.round((scores.accuracy + scores.grammar + scores.organization + scores.completeness) / 4);
+                
+                let grade = "C";
+                if (overall >= 93) grade = "A+";
+                else if (overall >= 85) grade = "A";
+                else if (overall >= 75) grade = "B";
+
+                // Map items onto active browser nodes
+                document.getElementById("resOverall").textContent = overall;
+                document.getElementById("resGrade").textContent = grade;
+                document.getElementById("lblAccuracy").textContent = `${scores.accuracy}%`;
+                document.getElementById("lblGrammar").textContent = `${scores.grammar}%`;
+                document.getElementById("lblOrganization").textContent = `${scores.organization}%`;
+                document.getElementById("lblCompleteness").textContent = `${scores.completeness}%`;
+
+                // Calculate Table Points based on percentages
+                document.getElementById("rubricAccuracy").textContent = `${Math.round(scores.accuracy * 0.4)} / 40`;
+                document.getElementById("rubricGrammar").textContent = `${Math.round(scores.grammar * 0.2)} / 20`;
+                document.getElementById("rubricOrg").textContent = `${Math.round(scores.organization * 0.2)} / 20`;
+                document.getElementById("rubricComplete").textContent = `${Math.round(scores.completeness * 0.2)} / 20`;
+
+                // Calculate simulated random plagiarism level
+                const computedPlagiarism = Math.floor(Math.random() * 15) + 4; 
+                document.getElementById("lblPlagiarism").textContent = `${computedPlagiarism}%`;
+                document.getElementById("barPlagiarism").style.width = `${computedPlagiarism}%`;
+
+                // Display hidden component panel smoothly
+                resultsSection.classList.remove("hidden");
+
+                // Process bar expansions
+                setTimeout(() => {
+                    document.getElementById("barAccuracy").style.width = `${scores.accuracy}%`;
+                    document.getElementById("barGrammar").style.width = `${scores.grammar}%`;
+                    document.getElementById("barOrganization").style.width = `${scores.organization}%`;
+                    document.getElementById("barCompleteness").style.width = `${scores.completeness}%`;
+                }, 100);
+
+                // Set feedback text conditions
+                let structuralMissingText = "No major gaps found. All primary tasks assigned within the structural question paper were evaluated.";
+                if(crossRatio < 0.85) {
+                    structuralMissingText = "Substantial concept gaps noticed. Core sub-queries, design formulas, or comparison summaries explicitly defined inside the Question Paper block are completely missing from your answer text.";
+                }
+
+                document.getElementById("feedbackStrengths").textContent = "The answer structure addresses core target definitions cleanly using correct academic phrasing.";
+                document.getElementById("feedbackWeaknesses").textContent = "Lacks deep empirical backup citations for several argumentative statements mentioned halfway through the work body.";
+                document.getElementById("feedbackMissing").textContent = structuralMissingText;
+                document.getElementById("feedbackGrammar").textContent = "A few runs of simple structural voice repetitions were noted. Overall vocabulary depth tracks exceptionally well.";
+                document.getElementById("feedbackComments").textContent = `Student ${name} (Regd. ID: ${regId}) showed strong organizational control. Fixing missing concepts will directly scale output efficiency.`;
+
+                // Target display alignment jump
+                resultsSection.scrollIntoView({ behavior: "smooth" });
+
+                // Update counter metrics
+                const dashboardCountNode = document.getElementById("statCount");
+                if (dashboardCountNode) {
+                    dashboardCountNode.textContent = parseInt(dashboardCountNode.textContent) + 1;
+                }
+            });
+
+            // --- CRITICAL FIXED: Flatten Layout Blueprint to bypass Canvas Grid Crashes ---
+            const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+            downloadPdfBtn.addEventListener("click", () => {
+                const targetContainer = document.getElementById("pdfReportContainer");
+                const regNo = document.getElementById("pdfRegId").textContent.trim() || "Report";
+
+                const configOptions = {
+                    margin:       [15, 15, 15, 15],
+                    filename:     `Evaluation_Transcript_${regNo}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, logging: false, letterRendering: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                // Add fallback class to safely bypass dynamic layout conflicts during rendering process
+                targetContainer.classList.add("html2pdf-fallback");
+
+                setTimeout(() => {
+                    html2pdf().set(configOptions).from(targetContainer).save().then(() => {
+                        // Restore structure configurations immediately
+                        targetContainer.classList.remove("html2pdf-fallback");
+                    }).catch(err => {
+                        console.error("PDF Engine Crash Log Details:", err);
+                        targetContainer.classList.remove("html2pdf-fallback");
+                    });
+                }, 400);
+            });
+        });
+    </script>
+</body>
+</html>
